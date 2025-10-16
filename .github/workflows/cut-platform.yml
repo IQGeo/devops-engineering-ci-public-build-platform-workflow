@@ -56,6 +56,12 @@ jobs:
             ls -la
             echo "The current working directory is:"
             pwd
+            echo "The $GITHUB_WORKSPACE is:"
+            ls -la $GITHUB_WORKSPACE
+            echo "The $CORE_REPO is:"
+            ls -la $CORE_REPO
+            echo "The $APPS_REPO is:"
+            ls -la $APPS_REPO
 
       - name: Create temp directory
         run: |
