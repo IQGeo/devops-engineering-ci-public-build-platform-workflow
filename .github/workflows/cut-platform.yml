@@ -8,10 +8,6 @@ on:
         description: 'Version to build'
         required: true
         type: string
-      module:
-        description: 'Module to build'
-        required: true
-        type: string
     secrets:
         GH_TOKEN:
             required: true   
@@ -27,11 +23,6 @@ jobs:
       OUTPUT_DIR: "temp"
       VERSION: ${{ inputs.version }}
     steps:
-
-      - name: Checkout Product repo
-        uses: actions/checkout@v4    
-        with:
-            path: ${{github.event.repository.name}}
             
       - name: Checkout Core repo
         uses: actions/checkout@v4
@@ -43,7 +34,6 @@ jobs:
       - name: Set Variables
         run: |
             echo "CORE_REPO=$GITHUB_WORKSPACE/myworld-product-core" >> $GITHUB_ENV
-            echo "MODULES_DIR=$GITHUB_WORKSPACE/myworld-product-core/WebApps/myworldapp/modules" >> $GITHUB_ENV  
         
       - name: Display Variables
         run: |
@@ -59,20 +49,6 @@ jobs:
             echo "The current working directory is:"
             pwd
 
-      - name: Move repo files to modules directory
-        run: |
-            echo "Remove .git from myworld-product-core.  We want the code, not a git repo"
-            rm -rf $CORE_REPO/.git
-            echo "Move "${{github.event.repository.name}}" content to modules.  We want this to remain a git repo"
-            mv $GITHUB_WORKSPACE/${{github.event.repository.name}}/* $MODULES_DIR
-            ls -la $MODULES_DIR
-      
-      - name: Move repo .git files to modules directory
-        run: |
-            echo "Move "${{github.event.repository.name}}" content to modules.  We want this to remain a git repo"
-            mv $GITHUB_WORKSPACE/${{github.event.repository.name}}/.* $MODULES_DIR
-            ls -la $MODULES_DIR
-      
       - name: Create temp directory
         run: |
             echo "Create temp directory"
@@ -85,7 +61,7 @@ jobs:
             echo "Install pip requirements and run cut modules"
             sudo apt install -y libfreetype-dev
             pip install -r $CORE_REPO/WebApps/myworldapp/modules/dev_tools/requirements.txt --user
-            $CORE_REPO/WebApps/myworldapp/modules/${{ inputs.module}}_dev_db/utils/cut_${{ inputs.module}}_modules $VERSION
+            $CORE_REPO/WebApps/myworldapp/modules/dev_tools/_unshipped/Utils/cut_all $VERSION
             cd temp
             pwd
             ls -la
@@ -103,7 +79,7 @@ jobs:
         uses: azure/cli@v2
         with:
           inlineScript: |
-             az storage file upload-batch -d cut-binaries -s ${{ github.workspace }}/${{ env.OUTPUT_DIR }} --destination-path ${{ inputs.module }} --account-name iqgeoplatformstorage --account-key ${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }}
+             az storage file upload-batch -d cut-binaries -s ${{ github.workspace }}/${{ env.OUTPUT_DIR }} --destination-path platform --account-name iqgeoplatformstorage --account-key ${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }}
           azcliversion: latest
 
       - name: Archive binaries
