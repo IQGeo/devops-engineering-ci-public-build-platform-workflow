@@ -27,20 +27,18 @@ jobs:
       - name: Checkout Core repo
         uses: actions/checkout@v4
         with:
-            repository: IQGeo/myworld-product-core
-            path: myworld-product-core    
+            repository: IQGeo/myworld-product-core  
             token: ${{ secrets.GH_TOKEN }}
 
       - name: Set Variables
         run: |
-            echo "CORE_REPO=$GITHUB_WORKSPACE/myworld-product-core" >> $GITHUB_ENV
+            echo "CORE_REPO=$GITHUB_WORKSPACE" >> $GITHUB_ENV
         
       - name: Display Variables
         run: |
             echo "This cut will run with version $VERSION"
             echo "The caller workflow repository is "${{ github.event.repository.name }}""
             echo "Core repo path is $CORE_REPO"
-            echo "Modules directory is $MODULES_DIR"
 
       - name: View File System
         run: |
