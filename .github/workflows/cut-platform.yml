@@ -27,6 +27,13 @@ jobs:
       - name: Checkout Core repo
         uses: actions/checkout@v4
         with:
+            repository: IQGeo/myworld-product-core
+            path: myworld-product-core
+            token: ${{ secrets.GH_TOKEN }}
+
+      - name: Checkout native apps repo
+        uses: actions/checkout@v4
+        with:
             repository: IQGeo/myworld-product-native-apps
             path: apps
             token: ${{ secrets.GH_TOKEN }}
