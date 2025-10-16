@@ -1,0 +1,114 @@
+name: Cut Module
+description: Workflow for running python script to take a cut of source-code for a specified version and storing the zip files of the binaries for later use in building the injector images
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: 'Version to build'
+        required: true
+        type: string
+      module:
+        description: 'Module to build'
+        required: true
+        type: string
+    secrets:
+        GH_TOKEN:
+            required: true   
+        AZURE_STORAGE_ACCOUNT_KEY:
+            required: true
+        AZURE_CREDENTIALS:
+            required: true
+
+jobs:
+  cut_engine:
+    runs-on: ubuntu-latest
+    env:
+      OUTPUT_DIR: "temp"
+      VERSION: ${{ inputs.version }}
+    steps:
+
+      - name: Checkout Product repo
+        uses: actions/checkout@v4    
+        with:
+            path: ${{github.event.repository.name}}
+            
+      - name: Checkout Core repo
+        uses: actions/checkout@v4
+        with:
+            repository: IQGeo/myworld-product-core
+            path: myworld-product-core    
+            token: ${{ secrets.GH_TOKEN }}
+
+      - name: Set Variables
+        run: |
+            echo "CORE_REPO=$GITHUB_WORKSPACE/myworld-product-core" >> $GITHUB_ENV
+            echo "MODULES_DIR=$GITHUB_WORKSPACE/myworld-product-core/WebApps/myworldapp/modules" >> $GITHUB_ENV  
+        
+      - name: Display Variables
+        run: |
+            echo "This cut will run with version $VERSION"
+            echo "The caller workflow repository is "${{ github.event.repository.name }}""
+            echo "Core repo path is $CORE_REPO"
+            echo "Modules directory is $MODULES_DIR"
+
+      - name: View File System
+        run: |
+            echo "The file system is:"
+            ls -la
+            echo "The current working directory is:"
+            pwd
+
+      - name: Move repo files to modules directory
+        run: |
+            echo "Remove .git from myworld-product-core.  We want the code, not a git repo"
+            rm -rf $CORE_REPO/.git
+            echo "Move "${{github.event.repository.name}}" content to modules.  We want this to remain a git repo"
+            mv $GITHUB_WORKSPACE/${{github.event.repository.name}}/* $MODULES_DIR
+            ls -la $MODULES_DIR
+      
+      - name: Move repo .git files to modules directory
+        run: |
+            echo "Move "${{github.event.repository.name}}" content to modules.  We want this to remain a git repo"
+            mv $GITHUB_WORKSPACE/${{github.event.repository.name}}/.* $MODULES_DIR
+            ls -la $MODULES_DIR
+      
+      - name: Create temp directory
+        run: |
+            echo "Create temp directory"
+            pwd
+            mkdir -p $OUTPUT_DIR
+            ls -la
+ 
+      - name: Install pip requirements and run cut modules
+        run: |
+            echo "Install pip requirements and run cut modules"
+            sudo apt install -y libfreetype-dev
+            pip install -r $CORE_REPO/WebApps/myworldapp/modules/dev_tools/requirements.txt --user
+            $CORE_REPO/WebApps/myworldapp/modules/${{ inputs.module}}_dev_db/utils/cut_${{ inputs.module}}_modules $VERSION
+            cd temp
+            pwd
+            ls -la
+        env:
+          ###### This OUTPUT_DIR value is different on all modules cut scripts, it needs to be standardised
+            OUTPUT_DIR: "${{ github.workspace }}/${{ env.OUTPUT_DIR }}"
+      
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # Will need to add variable for --destination-path, this is the modulename 
+      - name: Store artifacts in AZ File Share
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+             az storage file upload-batch -d cut-binaries -s ${{ github.workspace }}/${{ env.OUTPUT_DIR }} --destination-path ${{ inputs.module }} --account-name iqgeoplatformstorage --account-key ${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }}
+          azcliversion: latest
+
+      - name: Archive binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries
+          path: ${{ github.workspace }}/${{ env.OUTPUT_DIR }}
+          retention-days: 1
