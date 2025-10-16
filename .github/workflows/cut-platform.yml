@@ -76,13 +76,10 @@ jobs:
             sudo apt install -y libfreetype-dev
             cd $CORE_REPO
             pip install -r WebApps/myworldapp/modules/dev_tools/requirements.txt --user
-            WebApps/myworldapp/modules/dev_tools/_unshipped/Utils/cut_all $VERSION $OUTPUT_DIR 
+            WebApps/myworldapp/modules/dev_tools/_unshipped/Utils/cut_all $VERSION $GITHUB_WORKSPACE/$OUTPUT_DIR
             cd temp
             pwd
             ls -la
-        env:
-          ###### This OUTPUT_DIR value is different on all modules cut scripts, it needs to be standardised
-            OUTPUT_DIR: "${{ github.workspace }}/${{ env.OUTPUT_DIR }}"
       
       - name: Azure Login
         uses: azure/login@v2
