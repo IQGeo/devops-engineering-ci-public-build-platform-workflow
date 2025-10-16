@@ -77,9 +77,8 @@ jobs:
             cd $CORE_REPO
             pip install -r WebApps/myworldapp/modules/dev_tools/requirements.txt --user
             WebApps/myworldapp/modules/dev_tools/_unshipped/Utils/cut_all $VERSION $GITHUB_WORKSPACE/$OUTPUT_DIR
-            cd temp
-            pwd
-            ls -la
+            echo "Output directory contents:"
+            ls -la $GITHUB_WORKSPACE/$OUTPUT_DIR
       
       - name: Azure Login
         uses: azure/login@v2
