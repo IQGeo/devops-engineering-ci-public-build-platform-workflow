@@ -74,8 +74,9 @@ jobs:
         run: |
             echo "Install pip requirements and run cut modules"
             sudo apt install -y libfreetype-dev
-            pip install -r $CORE_REPO/WebApps/myworldapp/modules/dev_tools/requirements.txt --user
-            $CORE_REPO/WebApps/myworldapp/modules/dev_tools/_unshipped/Utils/cut_all $VERSION
+            cd $CORE_REPO
+            pip install -r WebApps/myworldapp/modules/dev_tools/requirements.txt --user
+            WebApps/myworldapp/modules/dev_tools/_unshipped/Utils/cut_all $VERSION $OUTPUT_DIR 
             cd temp
             pwd
             ls -la
