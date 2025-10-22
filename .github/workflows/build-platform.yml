@@ -8,6 +8,11 @@ on:
         description: 'Version to build'
         required: true
         type: string
+      modules:
+        description: 'Comma-separated list of modules to build'
+        required: false
+        type: string
+        default: 'vector_tile_styles,reporting_examples,embeddedExamples,dev_db'        
       shortened_version:
         description: 'Shortened version for language packs repo'
         required: true
