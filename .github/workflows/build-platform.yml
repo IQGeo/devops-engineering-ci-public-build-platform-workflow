@@ -132,7 +132,7 @@ jobs:
       build_id: ${{ inputs.build_id }}
       shortened_version: ${{ inputs.shortened_version }}
       is_release: ${{ inputs.is_release }}
-      engineering_prefix: ${{ inputs.engineering_prefix }}/${{ fromJson(needs.setup.outputs.modules_array)[0] }}
+      engineering_prefix: ${{ inputs.engineering_prefix }}/platform
       releases_prefix: ${{ inputs.releases_prefix }}
     secrets: inherit
 
