@@ -146,30 +146,6 @@ jobs:
       dev_tools_version: ${{ inputs.version }}
     secrets: inherit
     
-  # build-clear-specialised-platform-images:
-  #   needs: [setup]
-  #   strategy:
-  #     matrix:
-  #       include:
-  #         - module: platform-${{ needs.setup.outputs.hyphenated_module }}-appserver
-  #           dockerfile_path: deployment/dockerfile.appserver
-  #         - module: platform-${{ needs.setup.outputs.hyphenated_module }}-tools  
-  #           dockerfile_path: deployment/dockerfile.tools
-  #   uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-multi-arch.yml@main
-  #   with:
-  #     version: ${{ inputs.version }}
-  #     module: ${{ matrix.module }}
-  #     dockerfile_path: ${{ matrix.dockerfile_path }}
-  #     docker_context: "./deployment"
-  #     acr: "iqgeoproddev.azurecr.io"
-  #     harbor: "harbor.delivery.iqgeo.cloud"
-  #     updated_tags: ${{ inputs.tags }}
-  #     build_id: ${{ inputs.build_id }}
-  #     is_release: ${{ inputs.is_release }}
-  #     engineering_prefix: ${{ inputs.engineering_prefix }}
-  #     releases_prefix: ${{ inputs.releases_prefix }}
-  #   secrets: inherit
-    
   # build-platform-devdb-qa-images:
   #   needs: [setup, build-specialised-platform-images]
   #   uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-multi-arch.yml@main
