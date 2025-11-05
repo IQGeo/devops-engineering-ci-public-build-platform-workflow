@@ -196,23 +196,19 @@ jobs:
       dev_tools_version: ${{ inputs.version }}
     secrets: inherit
     
-  # build-platform-devdb-qa-images:
-  #   if: ${{ inputs.build_qa_images == true }}    
-  #   needs: [setup, build-platform-wave-4]
-  #   uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-multi-arch.yml@main
-  #   with:
-  #     version: ${{ inputs.version }}
-  #     module: platform-${{ needs.setup.outputs.hyphenated_module }}-qa-appserver
-  #     dockerfile_path: "deployment/dockerfile.QAappserver"
-  #     docker_context: "."
-  #     acr: "iqgeoproddev.azurecr.io"
-  #     harbor: "harbor.delivery.iqgeo.cloud"
-  #     updated_tags: ${{ inputs.tags }}
-  #     build_id: ${{ inputs.build_id }}
-  #     is_release: ${{ inputs.is_release }}
-  #     engineering_prefix: ${{ inputs.engineering_prefix }}
-  #     releases_prefix: ${{ inputs.releases_prefix }}
-  #   secrets: inherit
+  build-platform-devdb-qa-images:
+    if: ${{ inputs.build_qa_images == true }}    
+    needs: [setup, build-injectors, build-platform-wave-3]
+    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-devdb-qa-images.yml@main
+    with:
+      version: ${{ inputs.version }}
+      modules: ${{ inputs.modules }}
+      updated_tags: ${{ inputs.tags }}
+      build_id: ${{ inputs.build_id }}
+      is_release: ${{ inputs.is_release }}
+      engineering_prefix: ${{ inputs.engineering_prefix }}
+      releases_prefix: ${{ inputs.releases_prefix }}
+    secrets: inherit
 
   # redeploy-eks-pod:
   #   if: ${{ inputs.namespace != '' && inputs.pod_name != '' && inputs.build_qa_images == true }}
