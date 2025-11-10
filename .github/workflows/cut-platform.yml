@@ -20,7 +20,7 @@ jobs:
   cut_engine:
     runs-on: ubuntu-latest
     env:
-      OUTPUT_DIR: "temp"
+      OUTPUT_DIR: "tmp"
       VERSION: ${{ inputs.version }}
     steps:
             

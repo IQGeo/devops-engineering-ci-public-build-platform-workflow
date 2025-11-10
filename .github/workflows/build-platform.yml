@@ -115,106 +115,106 @@ jobs:
       version: ${{ inputs.version }}
     secrets: inherit
     
-  build-injectors:
-    needs: [setup, cut-artifacts]
-    strategy:
-      matrix:
-        module: ${{ fromJson(needs.setup.outputs.modules_array) }}
-    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@devops/ET-734-platform-workflow
-    with:
-      version: ${{ inputs.version }}
-      dockerfile_path: "Dockerfile.injector"
-      docker_context: "."
-      module: ${{ matrix.module }}
-      acr: "iqgeoproddev.azurecr.io"
-      harbor: "harbor.delivery.iqgeo.cloud"
-      updated_tags: ${{ inputs.tags }}
-      build_id: ${{ inputs.build_id }}
-      shortened_version: ${{ inputs.shortened_version }}
-      is_release: ${{ inputs.is_release }}
-      engineering_prefix: ${{ inputs.engineering_prefix }}/platform
-      releases_prefix: ${{ inputs.releases_prefix }}
-    secrets: inherit
-
-  # Wave 1: Build base and base-clear images (no dependencies)
-  build-platform-wave-1:
-    needs: [setup, cut-artifacts]
-    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@main
-    with:
-      version: ${{ inputs.version }}
-      wave: "1"
-      updated_tags: ${{ inputs.tags }}
-      build_id: ${{ inputs.build_id }}
-      is_release: ${{ inputs.is_release }}
-      engineering_prefix: ${{ inputs.engineering_prefix }}
-      releases_prefix: ${{ inputs.releases_prefix }}
-      dev_tools_version: ${{ inputs.version }}
-    secrets: inherit
-
-  # Wave 2: Build build and build-clear images (depends on wave 1)
-  build-platform-wave-2:
-    needs: [setup, build-platform-wave-1]
-    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@main
-    with:
-      version: ${{ inputs.version }}
-      wave: "2"
-      updated_tags: ${{ inputs.tags }}
-      build_id: ${{ inputs.build_id }}
-      is_release: ${{ inputs.is_release }}
-      engineering_prefix: ${{ inputs.engineering_prefix }}
-      releases_prefix: ${{ inputs.releases_prefix }}
-      dev_tools_version: ${{ inputs.version }}
-    secrets: inherit
-
-  # Wave 3: Build appserver and tools images (depends on wave 2, runs in parallel)
-  build-platform-wave-3:
-    needs: [setup, build-platform-wave-2]
-    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@main
-    with:
-      version: ${{ inputs.version }}
-      wave: "3"
-      updated_tags: ${{ inputs.tags }}
-      build_id: ${{ inputs.build_id }}
-      is_release: ${{ inputs.is_release }}
-      engineering_prefix: ${{ inputs.engineering_prefix }}
-      releases_prefix: ${{ inputs.releases_prefix }}
-      dev_tools_version: ${{ inputs.version }}
-    secrets: inherit
-
-  # Wave 4: Build devenv and devenv-clear images (depends on wave 3)
-  build-platform-wave-4:
-    needs: [setup, build-platform-wave-3]
-    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@main
-    with:
-      version: ${{ inputs.version }}
-      wave: "4"
-      updated_tags: ${{ inputs.tags }}
-      build_id: ${{ inputs.build_id }}
-      is_release: ${{ inputs.is_release }}
-      engineering_prefix: ${{ inputs.engineering_prefix }}
-      releases_prefix: ${{ inputs.releases_prefix }}
-      dev_tools_version: ${{ inputs.version }}
-    secrets: inherit
-    
-  build-platform-devdb-qa-images:
-    if: ${{ inputs.build_qa_images == true }}    
-    needs: [setup, build-injectors, build-platform-wave-3]
-    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-devdb-qa-images.yml@main
-    with:
-      version: ${{ inputs.version }}
-      modules: ${{ inputs.modules }}
-      updated_tags: ${{ inputs.tags }}
-      build_id: ${{ inputs.build_id }}
-      is_release: ${{ inputs.is_release }}
-      engineering_prefix: ${{ inputs.engineering_prefix }}
-      releases_prefix: ${{ inputs.releases_prefix }}
-    secrets: inherit
-
-  # redeploy-eks-pod:
-  #   if: ${{ inputs.namespace != '' && inputs.pod_name != '' && inputs.build_qa_images == true }}
-  #   needs: [setup, build-platform-components]
-  #   uses: IQGeo/devops-engineering-ci-redeploy-eks-pod/.github/workflows/redeploy-eks-pod.yml@main
+  # build-injectors:
+  #   needs: [setup, cut-artifacts]
+  #   strategy:
+  #     matrix:
+  #       module: ${{ fromJson(needs.setup.outputs.modules_array) }}
+  #   uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@devops/ET-734-platform-workflow
   #   with:
-  #     pod_name: ${{ inputs.pod_name }}
-  #     namespace: ${{ inputs.namespace }}
+  #     version: ${{ inputs.version }}
+  #     dockerfile_path: "Dockerfile.injector"
+  #     docker_context: "."
+  #     module: ${{ matrix.module }}
+  #     acr: "iqgeoproddev.azurecr.io"
+  #     harbor: "harbor.delivery.iqgeo.cloud"
+  #     updated_tags: ${{ inputs.tags }}
+  #     build_id: ${{ inputs.build_id }}
+  #     shortened_version: ${{ inputs.shortened_version }}
+  #     is_release: ${{ inputs.is_release }}
+  #     engineering_prefix: ${{ inputs.engineering_prefix }}/platform
+  #     releases_prefix: ${{ inputs.releases_prefix }}
   #   secrets: inherit
+
+  # # Wave 1: Build base and base-clear images (no dependencies)
+  # build-platform-wave-1:
+  #   needs: [setup, cut-artifacts]
+  #   uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@main
+  #   with:
+  #     version: ${{ inputs.version }}
+  #     wave: "1"
+  #     updated_tags: ${{ inputs.tags }}
+  #     build_id: ${{ inputs.build_id }}
+  #     is_release: ${{ inputs.is_release }}
+  #     engineering_prefix: ${{ inputs.engineering_prefix }}
+  #     releases_prefix: ${{ inputs.releases_prefix }}
+  #     dev_tools_version: ${{ inputs.version }}
+  #   secrets: inherit
+
+  # # Wave 2: Build build and build-clear images (depends on wave 1)
+  # build-platform-wave-2:
+  #   needs: [setup, build-platform-wave-1]
+  #   uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@main
+  #   with:
+  #     version: ${{ inputs.version }}
+  #     wave: "2"
+  #     updated_tags: ${{ inputs.tags }}
+  #     build_id: ${{ inputs.build_id }}
+  #     is_release: ${{ inputs.is_release }}
+  #     engineering_prefix: ${{ inputs.engineering_prefix }}
+  #     releases_prefix: ${{ inputs.releases_prefix }}
+  #     dev_tools_version: ${{ inputs.version }}
+  #   secrets: inherit
+
+  # # Wave 3: Build appserver and tools images (depends on wave 2, runs in parallel)
+  # build-platform-wave-3:
+  #   needs: [setup, build-platform-wave-2]
+  #   uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@main
+  #   with:
+  #     version: ${{ inputs.version }}
+  #     wave: "3"
+  #     updated_tags: ${{ inputs.tags }}
+  #     build_id: ${{ inputs.build_id }}
+  #     is_release: ${{ inputs.is_release }}
+  #     engineering_prefix: ${{ inputs.engineering_prefix }}
+  #     releases_prefix: ${{ inputs.releases_prefix }}
+  #     dev_tools_version: ${{ inputs.version }}
+  #   secrets: inherit
+
+  # # Wave 4: Build devenv and devenv-clear images (depends on wave 3)
+  # build-platform-wave-4:
+  #   needs: [setup, build-platform-wave-3]
+  #   uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@main
+  #   with:
+  #     version: ${{ inputs.version }}
+  #     wave: "4"
+  #     updated_tags: ${{ inputs.tags }}
+  #     build_id: ${{ inputs.build_id }}
+  #     is_release: ${{ inputs.is_release }}
+  #     engineering_prefix: ${{ inputs.engineering_prefix }}
+  #     releases_prefix: ${{ inputs.releases_prefix }}
+  #     dev_tools_version: ${{ inputs.version }}
+  #   secrets: inherit
+    
+  # build-platform-devdb-qa-images:
+  #   if: ${{ inputs.build_qa_images == true }}    
+  #   needs: [setup, build-injectors, build-platform-wave-3]
+  #   uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-devdb-qa-images.yml@main
+  #   with:
+  #     version: ${{ inputs.version }}
+  #     modules: ${{ inputs.modules }}
+  #     updated_tags: ${{ inputs.tags }}
+  #     build_id: ${{ inputs.build_id }}
+  #     is_release: ${{ inputs.is_release }}
+  #     engineering_prefix: ${{ inputs.engineering_prefix }}
+  #     releases_prefix: ${{ inputs.releases_prefix }}
+  #   secrets: inherit
+
+  # # redeploy-eks-pod:
+  # #   if: ${{ inputs.namespace != '' && inputs.pod_name != '' && inputs.build_qa_images == true }}
+  # #   needs: [setup, build-platform-components]
+  # #   uses: IQGeo/devops-engineering-ci-redeploy-eks-pod/.github/workflows/redeploy-eks-pod.yml@main
+  # #   with:
+  # #     pod_name: ${{ inputs.pod_name }}
+  # #     namespace: ${{ inputs.namespace }}
+  # #   secrets: inherit
