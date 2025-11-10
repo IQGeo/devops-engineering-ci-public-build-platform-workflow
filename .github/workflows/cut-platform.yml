@@ -30,7 +30,7 @@ jobs:
             repository: IQGeo/myworld-product-core
             path: myworld-product-core
             token: ${{ secrets.GH_TOKEN }}
-            git-lfs: true
+            lfs: true
             submodules: true
 
       - name: Checkout native apps repo
