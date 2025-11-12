@@ -123,7 +123,7 @@ jobs:
     uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@devops/ET-734-platform-workflow
     with:
       version: ${{ inputs.version }}
-      dockerfile_path: "Dockerfile.injector"
+      dockerfile_path: ".github/workflows/Dockerfile.injector"
       docker_context: "."
       module: ${{ matrix.module }}
       acr: "iqgeoproddev.azurecr.io"
