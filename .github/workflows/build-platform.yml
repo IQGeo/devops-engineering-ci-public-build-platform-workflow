@@ -210,11 +210,11 @@ jobs:
       releases_prefix: ${{ inputs.releases_prefix }}
     secrets: inherit
 
-  # redeploy-eks-pod:
-  #   if: ${{ inputs.namespace != '' && inputs.pod_name != '' && inputs.build_qa_images == true }}
-  #   needs: [setup, build-platform-components]
-  #   uses: IQGeo/devops-engineering-ci-redeploy-eks-pod/.github/workflows/redeploy-eks-pod.yml@main
-  #   with:
-  #     pod_name: ${{ inputs.pod_name }}
-  #     namespace: ${{ inputs.namespace }}
-  #   secrets: inherit
+  redeploy-eks-pod:
+    if: ${{ inputs.namespace != '' && inputs.pod_name != '' && inputs.build_qa_images == true }}
+    needs: [build-platform-devdb-qa-images]
+    uses: IQGeo/devops-engineering-ci-redeploy-eks-pod/.github/workflows/redeploy-eks-pod.yml@main
+    with:
+      pod_name: ${{ inputs.pod_name }}
+      namespace: ${{ inputs.namespace }}
+    secrets: inherit
