@@ -139,7 +139,7 @@ jobs:
   # Wave 1: Build base and base-clear images (no dependencies)
   build-platform-wave-1:
     needs: [setup, cut-artifacts]
-    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@main
+    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@ET-734-test-spec-matrix
     with:
       version: ${{ inputs.version }}
       wave: "1"
@@ -154,7 +154,7 @@ jobs:
   # Wave 2: Build build and build-clear images (depends on wave 1)
   build-platform-wave-2:
     needs: [setup, build-platform-wave-1]
-    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@main
+    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@ET-734-test-spec-matrix
     with:
       version: ${{ inputs.version }}
       wave: "2"
@@ -169,7 +169,7 @@ jobs:
   # Wave 3: Build appserver and tools images (depends on wave 2, runs in parallel)
   build-platform-wave-3:
     needs: [setup, build-platform-wave-2]
-    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@main
+    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@ET-734-test-spec-matrix
     with:
       version: ${{ inputs.version }}
       wave: "3"
@@ -184,7 +184,7 @@ jobs:
   # Wave 4: Build devenv and devenv-clear images (depends on wave 3)
   build-platform-wave-4:
     needs: [setup, build-platform-wave-3]
-    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@main
+    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@ET-734-test-spec-matrix
     with:
       version: ${{ inputs.version }}
       wave: "4"
