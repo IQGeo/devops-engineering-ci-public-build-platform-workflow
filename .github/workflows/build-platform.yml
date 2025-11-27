@@ -61,8 +61,6 @@ on:
       REGISTRY_PASSWORD:
         required: true
 
-env:
-
 run-name: Build ${{ inputs.version }}
 
 jobs:
