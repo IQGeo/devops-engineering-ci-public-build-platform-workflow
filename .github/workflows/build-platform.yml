@@ -12,12 +12,7 @@ on:
         description: 'Comma-separated list of modules to build'
         required: false
         type: string
-        default: 'workflow_manager,workflow_manager_dev_db,wfm_nmt'
-      include_editions:
-        description: 'Whether to build editions images'
-        required: false
-        type: boolean
-        default: true
+        default: 'vector_tile_styles,reporting_examples,embeddedExamples,dev_db'        
       shortened_version:
         description: 'Shortened version for language packs repo'
         required: true
@@ -42,10 +37,6 @@ on:
         description: 'Whether this is a pre-release or release version'
         required: true
         type: string
-      build_qa_images:
-        description: 'Whether to build QA images (platform with module)'
-        type: boolean
-        default: true
       namespace:
         description: 'Kubernetes namespace for the deployment'
         type: string
@@ -53,6 +44,10 @@ on:
         description: 'Kubernetes pod name to redeploy after images are built'
         type: string
         default: ''
+      build_qa_images:
+        description: 'Whether to build QA images (platform with devdb)'
+        type: boolean
+        default: true        
         
     secrets:
       GH_TOKEN:
@@ -67,27 +62,11 @@ on:
         required: true
 
 env:
-  # Registry Configuration
-  ACR_REGISTRY: "iqgeoproddev.azurecr.io"
-  
-  # External Workflow References
-  MULTI_ARCH_WORKFLOW: "IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main"
-  EDITIONS_WORKFLOW: "IQGeo/devops-engineering-ci-public-editions-workflow/.github/workflows/build-editions.yml@main"
-  
-  # Dockerfile Paths  
-  INJECTOR_DOCKERFILE: "Dockerfile.injector"
-  BUILD_DOCKERFILE: "deployment/dockerfile.build"
-  APPSERVER_DOCKERFILE: "deployment/dockerfile.appserver"
-  TOOLS_DOCKERFILE: "deployment/dockerfile.tools"
-  QA_DOCKERFILE: "deployment/dockerfile.QAappserver"
-  
-  # Build Contexts
-  ROOT_CONTEXT: "."
-  DEPLOYMENT_CONTEXT: "./deployment"
 
 run-name: Build ${{ inputs.version }}
 
 jobs:
+
   setup:
     runs-on: ubuntu-latest
     outputs:
@@ -111,13 +90,12 @@ jobs:
           echo "hyphenated_module=$HYPHENATED_MODULE" >> $GITHUB_OUTPUT
           echo "Hyphenated module name: $HYPHENATED_MODULE"
     
+    
   # The module is the first item in the modules array defined in the setup step above 
   cut-artifacts:
-    needs: setup
-    uses: ./.github/workflows/cut-module.yml
+    uses: ./.github/workflows/cut-platform.yml
     with:
       version: ${{ inputs.version }}
-      module: ${{ fromJson(needs.setup.outputs.modules_array)[0] }}
     secrets: inherit
     
   build-injectors:
@@ -128,7 +106,7 @@ jobs:
     uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
     with:
       version: ${{ inputs.version }}
-      dockerfile_path: "Dockerfile.injector"
+      dockerfile_path: ".github/workflows/Dockerfile.injector"
       docker_context: "."
       module: ${{ matrix.module }}
       acr: "iqgeoproddev.azurecr.io"
@@ -137,64 +115,77 @@ jobs:
       build_id: ${{ inputs.build_id }}
       shortened_version: ${{ inputs.shortened_version }}
       is_release: ${{ inputs.is_release }}
-      engineering_prefix: ${{ inputs.engineering_prefix }}/${{ fromJson(needs.setup.outputs.modules_array)[0] }}
+      engineering_prefix: ${{ inputs.engineering_prefix }}/platform
       releases_prefix: ${{ inputs.releases_prefix }}
     secrets: inherit
 
+  # Build base and base-clear images (no dependencies)
+  build-platform-base:
+    needs: [setup, cut-artifacts]
+    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@main
+    with:
+      version: ${{ inputs.version }}
+      image_types: '["base", "base-clear"]'
+      updated_tags: ${{ inputs.tags }}
+      build_id: ${{ inputs.build_id }}
+      is_release: ${{ inputs.is_release }}
+      engineering_prefix: ${{ inputs.engineering_prefix }}
+      releases_prefix: ${{ inputs.releases_prefix }}
+      dev_tools_version: ${{ inputs.version }}
+    secrets: inherit
+
+  # Build build and build-clear images (depends on base)
   build-platform-build:
-    if: ${{ inputs.build_qa_images == true }}
-    needs: [setup, build-injectors]
-    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
+    needs: [setup, build-platform-base]
+    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@main
     with:
       version: ${{ inputs.version }}
-      module: platform-${{ needs.setup.outputs.hyphenated_module }}-build
-      dockerfile_path: "deployment/dockerfile.build"
-      docker_context: "."
-      acr: "iqgeoproddev.azurecr.io"
-      harbor: "harbor.delivery.iqgeo.cloud"
+      image_types: '["build", "build-clear"]'
       updated_tags: ${{ inputs.tags }}
       build_id: ${{ inputs.build_id }}
       is_release: ${{ inputs.is_release }}
       engineering_prefix: ${{ inputs.engineering_prefix }}
       releases_prefix: ${{ inputs.releases_prefix }}
+      dev_tools_version: ${{ inputs.version }}
     secrets: inherit
-    
-  build-platform-components:
-    if: ${{ inputs.build_qa_images == true }}
+
+  # Build appserver and tools images (depends on build, runs in parallel)
+  build-platform-appserver-tools:
     needs: [setup, build-platform-build]
-    strategy:
-      matrix:
-        include:
-          - module: platform-${{ needs.setup.outputs.hyphenated_module }}-appserver
-            dockerfile_path: deployment/dockerfile.appserver
-          - module: platform-${{ needs.setup.outputs.hyphenated_module }}-tools  
-            dockerfile_path: deployment/dockerfile.tools
-    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
+    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@main
     with:
       version: ${{ inputs.version }}
-      module: ${{ matrix.module }}
-      dockerfile_path: ${{ matrix.dockerfile_path }}
-      docker_context: "./deployment"
-      acr: "iqgeoproddev.azurecr.io"
-      harbor: "harbor.delivery.iqgeo.cloud"
+      image_types: '["appserver", "tools"]'
       updated_tags: ${{ inputs.tags }}
       build_id: ${{ inputs.build_id }}
       is_release: ${{ inputs.is_release }}
       engineering_prefix: ${{ inputs.engineering_prefix }}
       releases_prefix: ${{ inputs.releases_prefix }}
+      dev_tools_version: ${{ inputs.version }}
     secrets: inherit
-    
-  build-qa-appserver:
-    if: ${{ inputs.build_qa_images == true }}
-    needs: [setup, build-platform-components]
-    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
+
+  # Build devenv and devenv-clear images (depends on appserver-tools)
+  build-platform-devenv:
+    needs: [setup, build-platform-appserver-tools]
+    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@main
     with:
       version: ${{ inputs.version }}
-      module: platform-${{ needs.setup.outputs.hyphenated_module }}-qa-appserver
-      dockerfile_path: "deployment/dockerfile.QAappserver"
-      docker_context: "."
-      acr: "iqgeoproddev.azurecr.io"
-      harbor: "harbor.delivery.iqgeo.cloud"
+      image_types: '["devenv", "devenv-clear"]'
+      updated_tags: ${{ inputs.tags }}
+      build_id: ${{ inputs.build_id }}
+      is_release: ${{ inputs.is_release }}
+      engineering_prefix: ${{ inputs.engineering_prefix }}
+      releases_prefix: ${{ inputs.releases_prefix }}
+      dev_tools_version: ${{ inputs.version }}
+    secrets: inherit
+    
+  build-platform-devdb-qa-images:
+    if: ${{ inputs.build_qa_images == true }}    
+    needs: [setup, build-injectors, build-platform-appserver-tools]
+    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-devdb-qa-images.yml@main
+    with:
+      version: ${{ inputs.version }}
+      modules: ${{ inputs.modules }}
       updated_tags: ${{ inputs.tags }}
       build_id: ${{ inputs.build_id }}
       is_release: ${{ inputs.is_release }}
@@ -204,7 +195,7 @@ jobs:
 
   redeploy-eks-pod:
     if: ${{ inputs.namespace != '' && inputs.pod_name != '' && inputs.build_qa_images == true }}
-    needs: [setup, build-platform-components]
+    needs: [build-platform-devdb-qa-images]
     uses: IQGeo/devops-engineering-ci-redeploy-eks-pod/.github/workflows/redeploy-eks-pod.yml@main
     with:
       pod_name: ${{ inputs.pod_name }}
