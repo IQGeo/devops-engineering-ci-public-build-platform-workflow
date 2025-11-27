@@ -62,23 +62,6 @@ on:
         required: true
 
 env:
-  # Registry Configuration
-  ACR_REGISTRY: "iqgeoproddev.azurecr.io"
-  
-  # External Workflow References
-  MULTI_ARCH_WORKFLOW: "IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main"
-  EDITIONS_WORKFLOW: "IQGeo/devops-engineering-ci-public-editions-workflow/.github/workflows/build-editions.yml@main"
-  
-  # Dockerfile Paths  
-  INJECTOR_DOCKERFILE: "Dockerfile.injector"
-  BUILD_DOCKERFILE: "deployment/dockerfile.build"
-  APPSERVER_DOCKERFILE: "deployment/dockerfile.appserver"
-  TOOLS_DOCKERFILE: "deployment/dockerfile.tools"
-  QA_DOCKERFILE: "deployment/dockerfile.QAappserver"
-  
-  # Build Contexts
-  ROOT_CONTEXT: "."
-  DEPLOYMENT_CONTEXT: "./deployment"
 
 run-name: Build ${{ inputs.version }}
 
@@ -120,7 +103,7 @@ jobs:
     strategy:
       matrix:
         module: ${{ fromJson(needs.setup.outputs.modules_array) }}
-    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@devops/ET-734-platform-workflow
+    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
     with:
       version: ${{ inputs.version }}
       dockerfile_path: ".github/workflows/Dockerfile.injector"
@@ -139,7 +122,7 @@ jobs:
   # Build base and base-clear images (no dependencies)
   build-platform-base:
     needs: [setup, cut-artifacts]
-    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@devops/et-734-test-spec-matrix
+    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@main
     with:
       version: ${{ inputs.version }}
       image_types: '["base", "base-clear"]'
@@ -154,7 +137,7 @@ jobs:
   # Build build and build-clear images (depends on base)
   build-platform-build:
     needs: [setup, build-platform-base]
-    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@devops/et-734-test-spec-matrix
+    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@main
     with:
       version: ${{ inputs.version }}
       image_types: '["build", "build-clear"]'
@@ -169,7 +152,7 @@ jobs:
   # Build appserver and tools images (depends on build, runs in parallel)
   build-platform-appserver-tools:
     needs: [setup, build-platform-build]
-    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@devops/et-734-test-spec-matrix
+    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@main
     with:
       version: ${{ inputs.version }}
       image_types: '["appserver", "tools"]'
@@ -184,7 +167,7 @@ jobs:
   # Build devenv and devenv-clear images (depends on appserver-tools)
   build-platform-devenv:
     needs: [setup, build-platform-appserver-tools]
-    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@devops/et-734-test-spec-matrix
+    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@main
     with:
       version: ${{ inputs.version }}
       image_types: '["devenv", "devenv-clear"]'
