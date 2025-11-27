@@ -62,23 +62,6 @@ on:
         required: true
 
 env:
-  # Registry Configuration
-  ACR_REGISTRY: "iqgeoproddev.azurecr.io"
-  
-  # External Workflow References
-  MULTI_ARCH_WORKFLOW: "IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main"
-  EDITIONS_WORKFLOW: "IQGeo/devops-engineering-ci-public-editions-workflow/.github/workflows/build-editions.yml@main"
-  
-  # Dockerfile Paths  
-  INJECTOR_DOCKERFILE: "Dockerfile.injector"
-  BUILD_DOCKERFILE: "deployment/dockerfile.build"
-  APPSERVER_DOCKERFILE: "deployment/dockerfile.appserver"
-  TOOLS_DOCKERFILE: "deployment/dockerfile.tools"
-  QA_DOCKERFILE: "deployment/dockerfile.QAappserver"
-  
-  # Build Contexts
-  ROOT_CONTEXT: "."
-  DEPLOYMENT_CONTEXT: "./deployment"
 
 run-name: Build ${{ inputs.version }}
 
@@ -120,7 +103,7 @@ jobs:
     strategy:
       matrix:
         module: ${{ fromJson(needs.setup.outputs.modules_array) }}
-    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@devops/ET-734-platform-workflow
+    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
     with:
       version: ${{ inputs.version }}
       dockerfile_path: ".github/workflows/Dockerfile.injector"
@@ -136,13 +119,13 @@ jobs:
       releases_prefix: ${{ inputs.releases_prefix }}
     secrets: inherit
 
-  # Wave 1: Build base and base-clear images (no dependencies)
-  build-platform-wave-1:
+  # Build base and base-clear images (no dependencies)
+  build-platform-base:
     needs: [setup, cut-artifacts]
     uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@main
     with:
       version: ${{ inputs.version }}
-      wave: "1"
+      image_types: '["base", "base-clear"]'
       updated_tags: ${{ inputs.tags }}
       build_id: ${{ inputs.build_id }}
       is_release: ${{ inputs.is_release }}
@@ -151,13 +134,13 @@ jobs:
       dev_tools_version: ${{ inputs.version }}
     secrets: inherit
 
-  # Wave 2: Build build and build-clear images (depends on wave 1)
-  build-platform-wave-2:
-    needs: [setup, build-platform-wave-1]
+  # Build build and build-clear images (depends on base)
+  build-platform-build:
+    needs: [setup, build-platform-base]
     uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@main
     with:
       version: ${{ inputs.version }}
-      wave: "2"
+      image_types: '["build", "build-clear"]'
       updated_tags: ${{ inputs.tags }}
       build_id: ${{ inputs.build_id }}
       is_release: ${{ inputs.is_release }}
@@ -166,13 +149,13 @@ jobs:
       dev_tools_version: ${{ inputs.version }}
     secrets: inherit
 
-  # Wave 3: Build appserver and tools images (depends on wave 2, runs in parallel)
-  build-platform-wave-3:
-    needs: [setup, build-platform-wave-2]
+  # Build appserver and tools images (depends on build, runs in parallel)
+  build-platform-appserver-tools:
+    needs: [setup, build-platform-build]
     uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@main
     with:
       version: ${{ inputs.version }}
-      wave: "3"
+      image_types: '["appserver", "tools"]'
       updated_tags: ${{ inputs.tags }}
       build_id: ${{ inputs.build_id }}
       is_release: ${{ inputs.is_release }}
@@ -181,13 +164,13 @@ jobs:
       dev_tools_version: ${{ inputs.version }}
     secrets: inherit
 
-  # Wave 4: Build devenv and devenv-clear images (depends on wave 3)
-  build-platform-wave-4:
-    needs: [setup, build-platform-wave-3]
+  # Build devenv and devenv-clear images (depends on appserver-tools)
+  build-platform-devenv:
+    needs: [setup, build-platform-appserver-tools]
     uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@main
     with:
       version: ${{ inputs.version }}
-      wave: "4"
+      image_types: '["devenv", "devenv-clear"]'
       updated_tags: ${{ inputs.tags }}
       build_id: ${{ inputs.build_id }}
       is_release: ${{ inputs.is_release }}
@@ -198,7 +181,7 @@ jobs:
     
   build-platform-devdb-qa-images:
     if: ${{ inputs.build_qa_images == true }}    
-    needs: [setup, build-injectors, build-platform-wave-3]
+    needs: [setup, build-injectors, build-platform-appserver-tools]
     uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-devdb-qa-images.yml@main
     with:
       version: ${{ inputs.version }}
