@@ -125,6 +125,7 @@ jobs:
       version: ${{ inputs.version }}
       image_types: '["base", "base-clear"]'
       updated_tags: ${{ inputs.tags }}
+      shortened_version: ${{ inputs.shortened_version }}      
       build_id: ${{ inputs.build_id }}
       is_release: ${{ inputs.is_release }}
       engineering_prefix: ${{ inputs.engineering_prefix }}
@@ -140,6 +141,7 @@ jobs:
       version: ${{ inputs.version }}
       image_types: '["build", "build-clear"]'
       updated_tags: ${{ inputs.tags }}
+      shortened_version: ${{ inputs.shortened_version }}      
       build_id: ${{ inputs.build_id }}
       is_release: ${{ inputs.is_release }}
       engineering_prefix: ${{ inputs.engineering_prefix }}
@@ -156,6 +158,7 @@ jobs:
       image_types: '["appserver", "tools"]'
       updated_tags: ${{ inputs.tags }}
       build_id: ${{ inputs.build_id }}
+      shortened_version: ${{ inputs.shortened_version }}      
       is_release: ${{ inputs.is_release }}
       engineering_prefix: ${{ inputs.engineering_prefix }}
       releases_prefix: ${{ inputs.releases_prefix }}
@@ -170,6 +173,7 @@ jobs:
       version: ${{ inputs.version }}
       image_types: '["devenv-2", "devenv-2-clear"]'
       updated_tags: ${{ inputs.tags }}
+      shortened_version: ${{ inputs.shortened_version }}      
       build_id: ${{ inputs.build_id }}
       is_release: ${{ inputs.is_release }}
       engineering_prefix: ${{ inputs.engineering_prefix }}
@@ -184,7 +188,7 @@ jobs:
     with:
       version: ${{ inputs.version }}
       modules: ${{ inputs.modules }}
-      updated_tags: ${{ inputs.tags }}
+      updated_tags: ${{ inputs.tags }}    
       build_id: ${{ inputs.build_id }}
       is_release: ${{ inputs.is_release }}
       engineering_prefix: ${{ inputs.engineering_prefix }}
