@@ -120,7 +120,7 @@ jobs:
   # Build base and base-clear images (no dependencies)
   build-platform-base:
     needs: [setup, cut-artifacts]
-    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@dmain
+    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@main
     with:
       version: ${{ inputs.version }}
       image_types: '["base", "base-clear"]'
@@ -136,7 +136,7 @@ jobs:
   # Build build and build-clear images (depends on base)
   build-platform-build:
     needs: [setup, build-platform-base]
-    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@dmain
+    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@main
     with:
       version: ${{ inputs.version }}
       image_types: '["build", "build-clear"]'
@@ -152,7 +152,7 @@ jobs:
   # Build appserver and tools images (depends on build, runs in parallel)
   build-platform-appserver-tools:
     needs: [setup, build-platform-build]
-    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@dmain
+    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@main
     with:
       version: ${{ inputs.version }}
       image_types: '["appserver", "tools"]'
@@ -168,7 +168,7 @@ jobs:
   # Build devenv and devenv-clear images (depends on appserver-tools)
   build-platform-devenv:
     needs: [setup, build-platform-appserver-tools]
-    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@dmain
+    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-specialised-images.yml@main
     with:
       version: ${{ inputs.version }}
       image_types: '["devenv-2", "devenv-2-clear"]'
