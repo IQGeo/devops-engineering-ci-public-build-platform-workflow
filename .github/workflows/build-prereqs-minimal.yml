@@ -1,0 +1,142 @@
+name: Build Platform Pre-Reqs Minimal Image (Reusable)
+description: Reusable workflow to build a multi-arch platform pre-requisites minimal image and push it to ACR
+
+on:
+  workflow_call:
+    inputs:
+      dockerfile_context:
+        description: 'Docker build context path relative to the utils-docker-platform repository root'
+        required: true
+        type: string
+      dockerfile_path:
+        description: 'Path to the Dockerfile relative to the utils-docker-platform repository root'
+        required: true
+        type: string
+      image_repository:
+        description: 'Image repository path within the registry (e.g. platform/platform-prereqs-minimal)'
+        required: true
+        type: string
+      tag:
+        description: 'Base image tag (e.g. 7 or 7-ubuntu-2404)'
+        required: true
+        type: string
+      acr_registry:
+        description: 'ACR registry hostname'
+        required: false
+        type: string
+        default: 'iqgeoproddev.azurecr.io'
+      image_prefix:
+        description: 'Image prefix within the registry (e.g. engineering)'
+        required: false
+        type: string
+        default: 'engineering'
+    secrets:
+      GH_TOKEN:
+        required: true
+      REGISTRY_USERNAME:
+        required: true
+      REGISTRY_PASSWORD:
+        required: true
+
+jobs:
+  # Build amd64 architecture image
+  build-amd64:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout utils-docker-platform repository
+        uses: actions/checkout@v4
+        with:
+          repository: IQGeo/utils-docker-platform
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to ACR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ inputs.acr_registry }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Build and push amd64 image
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ inputs.dockerfile_context }}
+          file: ${{ inputs.dockerfile_path }}
+          push: true
+          tags: |
+            ${{ inputs.acr_registry }}/${{ inputs.image_prefix }}/${{ inputs.image_repository }}:${{ inputs.tag }}-amd64
+            ${{ inputs.acr_registry }}/${{ inputs.image_prefix }}/${{ inputs.image_repository }}:${{ inputs.tag }}-${{ github.run_number }}-amd64
+          provenance: false
+
+  # Build arm64 architecture image
+  build-arm64:
+    runs-on: arm64
+    steps:
+      - name: Checkout utils-docker-platform repository
+        uses: actions/checkout@v4
+        with:
+          repository: IQGeo/utils-docker-platform
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to ACR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ inputs.acr_registry }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Build and push arm64 image
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ inputs.dockerfile_context }}
+          file: ${{ inputs.dockerfile_path }}
+          push: true
+          tags: |
+            ${{ inputs.acr_registry }}/${{ inputs.image_prefix }}/${{ inputs.image_repository }}:${{ inputs.tag }}-arm64
+            ${{ inputs.acr_registry }}/${{ inputs.image_prefix }}/${{ inputs.image_repository }}:${{ inputs.tag }}-${{ github.run_number }}-arm64
+          provenance: false
+
+  # Create multi-architecture manifest
+  create-multi-arch-manifest:
+    needs: [build-amd64, build-arm64]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to ACR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ inputs.acr_registry }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Create and push multi-arch manifest for base tag
+        run: |
+          docker manifest create ${{ inputs.acr_registry }}/${{ inputs.image_prefix }}/${{ inputs.image_repository }}:${{ inputs.tag }} \
+            ${{ inputs.acr_registry }}/${{ inputs.image_prefix }}/${{ inputs.image_repository }}:${{ inputs.tag }}-amd64 \
+            ${{ inputs.acr_registry }}/${{ inputs.image_prefix }}/${{ inputs.image_repository }}:${{ inputs.tag }}-arm64
+
+          docker manifest annotate ${{ inputs.acr_registry }}/${{ inputs.image_prefix }}/${{ inputs.image_repository }}:${{ inputs.tag }} \
+            ${{ inputs.acr_registry }}/${{ inputs.image_prefix }}/${{ inputs.image_repository }}:${{ inputs.tag }}-amd64 --os linux --arch amd64
+
+          docker manifest annotate ${{ inputs.acr_registry }}/${{ inputs.image_prefix }}/${{ inputs.image_repository }}:${{ inputs.tag }} \
+            ${{ inputs.acr_registry }}/${{ inputs.image_prefix }}/${{ inputs.image_repository }}:${{ inputs.tag }}-arm64 --os linux --arch arm64
+
+          docker manifest push ${{ inputs.acr_registry }}/${{ inputs.image_prefix }}/${{ inputs.image_repository }}:${{ inputs.tag }}
+
+      - name: Create and push multi-arch manifest for build number tag
+        run: |
+          docker manifest create ${{ inputs.acr_registry }}/${{ inputs.image_prefix }}/${{ inputs.image_repository }}:${{ inputs.tag }}-${{ github.run_number }} \
+            ${{ inputs.acr_registry }}/${{ inputs.image_prefix }}/${{ inputs.image_repository }}:${{ inputs.tag }}-${{ github.run_number }}-amd64 \
+            ${{ inputs.acr_registry }}/${{ inputs.image_prefix }}/${{ inputs.image_repository }}:${{ inputs.tag }}-${{ github.run_number }}-arm64
+
+          docker manifest annotate ${{ inputs.acr_registry }}/${{ inputs.image_prefix }}/${{ inputs.image_repository }}:${{ inputs.tag }}-${{ github.run_number }} \
+            ${{ inputs.acr_registry }}/${{ inputs.image_prefix }}/${{ inputs.image_repository }}:${{ inputs.tag }}-${{ github.run_number }}-amd64 --os linux --arch amd64
+
+          docker manifest annotate ${{ inputs.acr_registry }}/${{ inputs.image_prefix }}/${{ inputs.image_repository }}:${{ inputs.tag }}-${{ github.run_number }} \
+            ${{ inputs.acr_registry }}/${{ inputs.image_prefix }}/${{ inputs.image_repository }}:${{ inputs.tag }}-${{ github.run_number }}-arm64 --os linux --arch arm64
+
+          docker manifest push ${{ inputs.acr_registry }}/${{ inputs.image_prefix }}/${{ inputs.image_repository }}:${{ inputs.tag }}-${{ github.run_number }}
