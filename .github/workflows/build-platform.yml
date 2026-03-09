@@ -21,6 +21,15 @@ on:
         description: 'Comma-separated list of all tags to apply'
         required: true
         type: string
+      preqs_tag:
+        description: 'Tag for pre-reqs image'
+        required: true
+        type: string
+        default: '7'     
+      pip_flags:
+        description: 'pip install option flags'
+        required: false
+        type: string            
       build_id:
         description: 'Unique build identifier'
         required: true
@@ -131,6 +140,7 @@ jobs:
       engineering_prefix: ${{ inputs.engineering_prefix }}
       releases_prefix: ${{ inputs.releases_prefix }}
       dev_tools_version: ${{ inputs.version }}
+      preqs_tag: ${{ inputs.preqs_tag }}      
     secrets: inherit
 
   # Build build and build-clear images (depends on base)
@@ -147,6 +157,8 @@ jobs:
       engineering_prefix: ${{ inputs.engineering_prefix }}
       releases_prefix: ${{ inputs.releases_prefix }}
       dev_tools_version: ${{ inputs.version }}
+      preqs_tag: ${{ inputs.preqs_tag }}
+      pip_flags: ${{ inputs.pip_flags }}      
     secrets: inherit
 
   # Build appserver and tools images (depends on build, runs in parallel)
@@ -163,6 +175,7 @@ jobs:
       engineering_prefix: ${{ inputs.engineering_prefix }}
       releases_prefix: ${{ inputs.releases_prefix }}
       dev_tools_version: ${{ inputs.version }}
+      preqs_tag: ${{ inputs.preqs_tag }}     
     secrets: inherit
 
   # Build devenv and devenv-clear images (depends on appserver-tools)
@@ -179,6 +192,8 @@ jobs:
       engineering_prefix: ${{ inputs.engineering_prefix }}
       releases_prefix: ${{ inputs.releases_prefix }}
       dev_tools_version: ${{ inputs.version }}
+      preqs_tag: ${{ inputs.preqs_tag }}
+      pip_flags: ${{ inputs.pip_flags }}      
     secrets: inherit
     
   build-platform-devdb-qa-images:
