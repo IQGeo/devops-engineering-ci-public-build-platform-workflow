@@ -200,7 +200,7 @@ jobs:
   build-platform-devdb-qa-images:
     if: ${{ inputs.build_qa_images == true }}    
     needs: [setup, build-injectors, build-platform-appserver-tools]
-    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-devdb-qa-images.yml@devops/add-jwt
+    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-devdb-qa-images.yml@devops/et-874-jwt-testing
     with:
       version: ${{ inputs.version }}
       modules: ${{ inputs.modules }}
