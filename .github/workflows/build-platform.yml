@@ -70,6 +70,10 @@ on:
       REGISTRY_PASSWORD:
         required: true
 
+permissions:
+  id-token: write
+  contents: read
+
 run-name: Build ${{ inputs.version }}
 
 jobs:
