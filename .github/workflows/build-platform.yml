@@ -73,6 +73,8 @@ on:
 permissions:
   id-token: write
   contents: read
+  actions: read
+  packages: write
 
 run-name: Build ${{ inputs.version }}
 
