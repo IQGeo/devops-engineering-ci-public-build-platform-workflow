@@ -56,7 +56,11 @@ on:
       build_qa_images:
         description: 'Whether to build QA images (platform with devdb)'
         type: boolean
-        default: true        
+        default: true 
+      base_image:
+        description: 'Base image to use for the centralized Dockerfile.injector'
+        type: string
+        required: true       
         
     secrets:
       GH_TOKEN:
@@ -110,9 +114,26 @@ jobs:
     with:
       version: ${{ inputs.version }}
     secrets: inherit
+
+  prepare-dockerfile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout central Dockerfiles repo
+        uses: actions/checkout@v4
+        with:
+          repository: IQGeo/devops-engineering-ci-buildfiles
+          path: central
+      - name: Copy platform Dockerfile.injector into expected location
+        run: |
+          mkdir -p .github/workflows
+          cp central/Dockerfile.injector.platform .github/workflows/Dockerfile.injector
+      - uses: actions/upload-artifact@v4
+        with:
+          name: injector-dockerfile
+          path: .github/workflows/Dockerfile.injector
     
   build-injectors:
-    needs: [setup, cut-artifacts]
+    needs: [setup, cut-artifacts, prepare-dockerfile]
     strategy:
       matrix:
         module: ${{ fromJson(needs.setup.outputs.modules_array) }}
@@ -130,6 +151,7 @@ jobs:
       is_release: ${{ inputs.is_release }}
       engineering_prefix: ${{ inputs.engineering_prefix }}/platform
       releases_prefix: ${{ inputs.releases_prefix }}
+      base_image: ${{ inputs.base_image }}
     secrets: inherit
 
   # Build base and base-clear images (no dependencies)
