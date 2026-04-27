@@ -56,7 +56,7 @@ on:
       build_qa_images:
         description: 'Whether to build QA images (platform with devdb)'
         type: boolean
-        default: true        
+        default: true      
         
     secrets:
       GH_TOKEN:
@@ -110,9 +110,26 @@ jobs:
     with:
       version: ${{ inputs.version }}
     secrets: inherit
+
+  prepare-dockerfile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout central Dockerfiles repo
+        uses: actions/checkout@v4
+        with:
+          repository: IQGeo/devops-engineering-ci-buildfiles
+          path: central
+      - name: Copy platform Dockerfile.injector into expected location
+        run: |
+          mkdir -p .github/workflows
+          cp central/Dockerfile.injector.platform .github/workflows/Dockerfile.injector
+      - uses: actions/upload-artifact@v4
+        with:
+          name: injector-dockerfile
+          path: .github/workflows/Dockerfile.injector
     
   build-injectors:
-    needs: [setup, cut-artifacts]
+    needs: [setup, cut-artifacts, prepare-dockerfile]
     strategy:
       matrix:
         module: ${{ fromJson(needs.setup.outputs.modules_array) }}
