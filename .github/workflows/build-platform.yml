@@ -56,11 +56,7 @@ on:
       build_qa_images:
         description: 'Whether to build QA images (platform with devdb)'
         type: boolean
-        default: true 
-      base_image:
-        description: 'Base image to use for the centralized Dockerfile.injector'
-        type: string
-        required: true       
+        default: true      
         
     secrets:
       GH_TOKEN:
@@ -151,7 +147,6 @@ jobs:
       is_release: ${{ inputs.is_release }}
       engineering_prefix: ${{ inputs.engineering_prefix }}/platform
       releases_prefix: ${{ inputs.releases_prefix }}
-      base_image: ${{ inputs.base_image }}
     secrets: inherit
 
   # Build base and base-clear images (no dependencies)
