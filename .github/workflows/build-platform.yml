@@ -133,7 +133,7 @@ jobs:
     strategy:
       matrix:
         module: ${{ fromJson(needs.setup.outputs.modules_array) }}
-    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@ET-778-centralized-injectors-modifications
+    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@devops/ET-778-centralized-injectors-modifications
     with:
       version: ${{ inputs.version }}
       dockerfile_path: ".github/workflows/Dockerfile.injector"
