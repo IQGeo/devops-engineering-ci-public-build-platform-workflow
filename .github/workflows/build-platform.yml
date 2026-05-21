@@ -137,7 +137,7 @@ jobs:
     uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
     with:
       version: ${{ inputs.version }}
-      dockerfile_path: ".github/workflows/Dockerfile.injector"
+      dockerfile_path: "Dockerfile.injector"
       docker_context: "."
       module: ${{ matrix.module }}
       acr: "iqgeoproddev.azurecr.io"
