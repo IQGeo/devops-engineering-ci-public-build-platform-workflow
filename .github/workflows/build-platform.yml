@@ -230,7 +230,7 @@ jobs:
   build-platform-devdb-qa-images:
     if: ${{ inputs.build_qa_images == true }}    
     needs: [setup, build-injectors, build-platform-appserver-tools]
-    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-devdb-qa-images.yml@main
+    uses: IQGeo/devops-engineering-ci-public-build-platform-specialised-image-workflow/.github/workflows/build-devdb-qa-images.yml@devops/et-946-test-npm-python-caching
     with:
       version: ${{ inputs.version }}
       modules: ${{ inputs.modules }}
@@ -238,7 +238,7 @@ jobs:
       build_id: ${{ inputs.build_id }}
       is_release: ${{ inputs.is_release }}
       engineering_prefix: ${{ inputs.engineering_prefix }}
-      releases_prefix: ${{ inputs.releases_prefix }}
+      releases_prefix: ${{ inputs.releases_prefix }}      
     secrets: inherit
 
   redeploy-eks-pod:
