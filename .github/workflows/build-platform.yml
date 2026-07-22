@@ -13,6 +13,11 @@ on:
         required: false
         type: string
         default: 'vector_tile_styles,reporting_examples,embeddedExamples,dev_db'        
+      release_modules:
+        description: 'Comma-separated list of modules to also push to the releases registry when is_release is true'
+        required: false
+        type: string
+        default: ''  # empty means none of the injector modules are released
       shortened_version:
         description: 'Shortened version for language packs repo'
         required: true
@@ -148,6 +153,7 @@ jobs:
       is_release: ${{ inputs.is_release }}
       engineering_prefix: ${{ inputs.engineering_prefix }}/platform
       releases_prefix: ${{ inputs.releases_prefix }}
+      release_modules: ${{ inputs.release_modules }}
     secrets: inherit
 
   # Build base and base-clear images (no dependencies)
