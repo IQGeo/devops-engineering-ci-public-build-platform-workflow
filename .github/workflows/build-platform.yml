@@ -80,7 +80,6 @@ permissions:
   contents: read
   actions: read
   packages: write
-  attestations: write # Pass through for provenance attestation
 
 run-name: Build ${{ inputs.version }}
 
