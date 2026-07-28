@@ -80,6 +80,7 @@ permissions:
   contents: read
   actions: read
   packages: write
+  attestations: write # Required for build provenance attestation
 
 run-name: Build ${{ inputs.version }}
 
