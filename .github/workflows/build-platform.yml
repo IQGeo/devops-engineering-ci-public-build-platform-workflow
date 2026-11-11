@@ -30,7 +30,17 @@ on:
         description: 'Tag for pre-reqs image'
         required: false
         type: string
-        default: '7'     
+        default: '7'
+      cut_python_version:
+        description: 'Python version for the cut artifacts'
+        required: false
+        type: string
+        default: '3.12'
+      cut_node_version:
+        description: 'Node version for the cut artifacts'
+        required: false
+        type: string
+        default: '22'
       pip_flags:
         description: 'pip install option flags'
         required: false
@@ -114,6 +124,8 @@ jobs:
     uses: ./.github/workflows/cut-platform.yml
     with:
       version: ${{ inputs.version }}
+      python_version: ${{ inputs.cut_python_version }}
+      node_version: ${{ inputs.cut_node_version }}
     secrets: inherit
 
   prepare-dockerfile:
